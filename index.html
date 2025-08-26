@@ -360,6 +360,12 @@ function restoreData(event) {
         #invoice-template .space-x-1 > *:not(:first-child) {
             margin-left: 0.25rem;
         }
+        #invoice-template .header-section img {
+    max-width: 25mm !important;
+    height: auto !important;
+    margin: 0 auto 5px auto !important;
+    display: block !important;
+}
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -667,7 +673,8 @@ function restoreData(event) {
 <hr>
 <div class="qris-section text-center">
     <p class="font-bold mb-1">Pembayaran via QRIS</p>
-    <img src="qris-rafaela.png" style="max-width:120px; margin:0 auto; display:block;" alt="QRIS Rafaela Print" style="max-width:120px; margin:0 auto;">
+<img src="qris-rafaela.png" alt="QRIS Rafaela Print" 
+     style="max-width:120px; margin:0 auto; display:block;">
     <p class="text-xs mt-1">Scan untuk bayar dengan semua e-wallet/bank</p>
 </div>
 
