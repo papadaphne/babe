@@ -261,7 +261,9 @@ function restoreData(event) {
             margin-bottom: 10px;
         }
         #invoice-template .header-section img {
-            max-width: 25mm; /* Adjust based on your logo size */
+            max-width: 25mm;
+    margin: 0 auto 5px auto;
+    display: block; /* Adjust based on your logo size */
             height: auto;
             margin-bottom: 5px;
             /* Filter ini akan membuat logo menjadi hitam. Pastikan path logo benar. */
@@ -665,7 +667,7 @@ function restoreData(event) {
 <hr>
 <div class="qris-section text-center">
     <p class="font-bold mb-1">Pembayaran via QRIS</p>
-    <img src="assets/qris-rafaela.png" alt="QRIS Rafaela Print" style="max-width:120px; margin:0 auto;">
+    <img src="qris-rafaela.png" style="max-width:120px; margin:0 auto; display:block;" alt="QRIS Rafaela Print" style="max-width:120px; margin:0 auto;">
     <p class="text-xs mt-1">Scan untuk bayar dengan semua e-wallet/bank</p>
 </div>
 
@@ -1086,8 +1088,8 @@ function restoreData(event) {
 
         try {
             // Render the entire invoice template to a single canvas
-            const canvas = await html2canvas(invoiceTemplate, { scale: 2 }); // Scale for better quality
-            const imgData = canvas.toDataURL('image/png');
+            const canvas = await html2canvas(invoiceTemplate, { scale: 1.5 }); // Scale for better quality
+            const imgData = canvas.toDataURL('image/jpeg', 0.7);
 
             // Initialize jsPDF with custom receipt dimensions
             // 'p' for portrait, 'mm' for millimeters
