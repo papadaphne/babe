@@ -41,7 +41,6 @@
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
-        /* --- PERUBAHAN 1: Styling untuk form item vertikal --- */
         .item-card {
             border: 1px solid #e5e7eb; /* gray-200 */
             border-radius: 0.5rem;
@@ -144,18 +143,16 @@
                 font-weight: bold;
                 color: #4b5563; /* gray-700 */
             }
-            /* Specific adjustments for select in td */
             .responsive-table td select {
                 width: auto; /* Allow select to shrink */
                 display: inline-block; /* Prevent full width */
             }
-            /* Adjust action buttons to flow better */
             .responsive-table td .flex {
                 justify-content: flex-end; /* Align actions to the right */
             }
         }
 
-        /* Invoice styling for PDF generation - hidden by default */
+        /* Invoice styling for PDF generation */
         #invoice-template {
             display: none;
             width: 80mm;
@@ -282,7 +279,7 @@
                     <div class="flex items-center gap-4 w-full sm:w-auto">
                         <select id="filter-bulan-pesanan" onchange="renderPesananTable()" class="w-full sm:w-auto p-2 border rounded-lg bg-white shadow-sm">
                             <option value="semua">Semua Bulan</option>
-                            </select>
+                        </select>
                         <button onclick="openModal('pesanan-modal')" class="bg-blue-500 text-white px-4 sm:px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">
                             <i class="fas fa-plus mr-0 sm:mr-2"></i><span class="hidden sm:inline">Tambah</span>
                         </button>
@@ -383,7 +380,7 @@
                 <hr class="my-6">
                 
                 <div id="order-items-container" class="space-y-3">
-                    </div>
+                </div>
                 <button type="button" onclick="tambahItem()" class="mt-2 text-blue-600 font-semibold hover:text-blue-800">
                     <i class="fas fa-plus mr-2"></i>Tambah Item Pesanan
                 </button>
@@ -473,7 +470,7 @@
         <hr>
         <div class="order-details">
             <div class="order-item-list" id="invoice-item-list">
-                </div>
+            </div>
         </div>
         <hr>
         <div class="summary-details">
@@ -516,7 +513,7 @@
         }
         
         updateDashboard();
-        populateBulanFilter(); // PERUBAHAN 2: Panggil fungsi populasi filter
+        populateBulanFilter(); 
         renderPesananTable();
         renderKaryawanTable();
         updateLaporan();
@@ -576,8 +573,8 @@
     function openModal(modalId) {
         document.getElementById(modalId).classList.add('show');
         if (modalId === 'pesanan-modal') {
-            document.getElementById('order-items-container').innerHTML = ''; // Clear previous items
-            tambahItem(); // Add the first item row automatically
+            document.getElementById('order-items-container').innerHTML = '';
+            tambahItem();
             hitungTotalInvoice();
         }
     }
@@ -623,7 +620,7 @@
         }
     }
 
-    // --- PERUBAHAN 1: FUNGSI PESANAN DENGAN FORM VERTIKAL ---
+    // --- FUNGSI PESANAN ---
     function tambahItem() {
         const container = document.getElementById('order-items-container');
         const itemCard = document.createElement('div');
@@ -729,7 +726,7 @@
         db.pesanan.push(pesananBaru);
         this.reset();
         closeModal('pesanan-modal');
-        populateBulanFilter(); // PERUBAHAN 2: Update filter jika ada bulan baru
+        populateBulanFilter(); 
         renderPesananTable();
         updateDashboard();
         updateLaporan();
@@ -737,17 +734,14 @@
         showNotification('Pesanan baru berhasil ditambahkan!');
     });
 
-    // --- PERUBAHAN 2: Fungsi untuk filter bulan ---
     function populateBulanFilter() {
         const filterSelect = document.getElementById('filter-bulan-pesanan');
         
-        const monthsInDb = [...new Set(db.pesanan.map(p => p.tanggal.substring(0, 7)))]; // Ambil YYYY-MM unik
-        monthsInDb.sort().reverse(); // Urutkan dari terbaru
+        const monthsInDb = [...new Set(db.pesanan.map(p => p.tanggal.substring(0, 7)))];
+        monthsInDb.sort().reverse();
         
-        // Simpan value yg sedang dipilih
         const selectedValue = filterSelect.value;
         
-        // Kosongkan opsi kecuali "Semua Bulan"
         while (filterSelect.options.length > 1) {
             filterSelect.remove(1);
         }
@@ -760,7 +754,6 @@
             filterSelect.add(option);
         });
         
-        // Kembalikan value yang dipilih jika masih ada
         filterSelect.value = selectedValue;
     }
     
@@ -827,7 +820,7 @@
         }
     }
 
-    // --- FUNGSI KARYAWAN & PAYROLL (TIDAK BERUBAH) ---
+    // --- FUNGSI KARYAWAN & PAYROLL ---
     document.getElementById('karyawan-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const karyawanBaru = {
@@ -927,7 +920,7 @@
         }
     });
 
-    // --- FUNGSI LAPORAN & DOWNLOAD (TIDAK BERUBAH) ---
+    // --- FUNGSI LAPORAN ---
     function updateLaporan() {
         const totalPenjualan = db.pesanan.reduce((sum, p) => sum + p.hargaJual, 0);
         const totalHpp = db.pesanan.reduce((sum, p) => sum + p.hpp, 0);
@@ -940,6 +933,16 @@
         document.getElementById('laporan-laba-bersih').textContent = formatRupiah(labaBersih);
     }
     
+    // --- PERBAIKAN: FUNGSI DOWNLOAD CSV YANG LEBIH BAIK ---
+    function formatCsvCell(data) {
+        let cell = data === null || data === undefined ? '' : String(data);
+        cell = cell.replace(/"/g, '""'); // Escape double quotes
+        if (cell.search(/("|,|\n)/g) >= 0) {
+            cell = `"${cell}"`; // Enclose in double quotes if it contains comma, newline, or double quote
+        }
+        return cell;
+    }
+
     function downloadLaporanBulanan() {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -962,35 +965,56 @@
         const totalGaji = payrollBulanIni.reduce((sum, p) => sum + p.totalGaji, 0);
         const labaBersih = totalPenjualan - totalHpp - totalGaji;
         
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `Laporan Keuangan Bulanan - Rafaela Print\n`;
-        csvContent += `Bulan: ${namaBulan} ${currentYear}\n\n`;
-        csvContent += "Ringkasan Keuangan\nKategori,Jumlah\n";
-        csvContent += `Total Pendapatan,${totalPenjualan}\nTotal HPP,${totalHpp}\nTotal Biaya Gaji,${totalGaji}\nLaba / Rugi Bersih,${labaBersih}\n\n`;
-        csvContent += "Detail Transaksi Pesanan\nTanggal,Invoice,Pelanggan,Harga Jual,HPP,Detail Item\n";
+        const rows = [];
+        rows.push([`Laporan Keuangan Bulanan - Rafaela Print`]);
+        rows.push([`Bulan: ${namaBulan} ${currentYear}`]);
+        rows.push([]);
+
+        rows.push(['Ringkasan Keuangan']);
+        rows.push(['Kategori', 'Jumlah']);
+        rows.push(['Total Pendapatan', totalPenjualan]);
+        rows.push(['Total HPP', totalHpp]);
+        rows.push(['Total Biaya Gaji', totalGaji]);
+        rows.push(['Laba / Rugi Bersih', labaBersih]);
+        rows.push([]);
+
+        rows.push(['Detail Transaksi Pesanan']);
+        rows.push(['Tanggal', 'Invoice', 'Pelanggan', 'Harga Jual', 'HPP', 'Detail Item']);
         pesananBulanIni.forEach(p => {
             const tgl = new Date(p.tanggal).toLocaleDateString('id-ID');
-            let itemDetails = p.items.map(item => `${item.produk} (Qty: ${item.jumlah}, Harga: ${item.harga})`).join('; ');
-            csvContent += `${tgl},${p.invoice},"${p.pelanggan}",${p.hargaJual},${p.hpp},"${itemDetails}"\n`;
+            const itemDetails = p.items.map(item => {
+                let detail = item.produk || '';
+                if (item.ukuran) detail += ` (${item.ukuran})`;
+                detail += ` x${item.jumlah} -> ${formatRupiah(item.jumlah * item.harga)}`;
+                return detail;
+            }).join(' | '); // Join with pipe for readability inside the cell
+
+            rows.push([tgl, p.invoice, p.pelanggan, p.hargaJual, p.hpp, itemDetails]);
         });
-        csvContent += `\n`;
-        csvContent += "Detail Pembayaran Gaji\nTanggal,Nama Karyawan,Periode,Total Gaji Dibayar\n";
+        rows.push([]);
+
+        rows.push(['Detail Pembayaran Gaji']);
+        rows.push(['Tanggal', 'Nama Karyawan', 'Periode', 'Total Gaji Dibayar']);
         payrollBulanIni.forEach(p => {
             const tgl = new Date(p.tanggal).toLocaleDateString('id-ID');
-            csvContent += `${tgl},"${p.namaKaryawan}",${p.periode},${p.totalGaji}\n`;
+            rows.push([tgl, p.namaKaryawan, p.periode, p.totalGaji]);
         });
 
-        const encodedUri = encodeURI(csvContent);
+        let csvContent = rows.map(row => row.map(formatCsvCell).join(',')).join('\n');
+        
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
         link.setAttribute("download", fileName);
+        link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         showNotification(`Laporan ${fileName} berhasil diunduh!`);
     }
 
-    // --- FUNGSI GENERATE INVOICE PDF (TIDAK BERUBAH) ---
+    // --- FUNGSI GENERATE INVOICE PDF ---
     async function generateInvoicePDF(pesananId) {
         const pesanan = db.pesanan.find(p => p.id === pesananId);
         if (!pesanan) {
@@ -1058,7 +1082,7 @@
         }
     }
 
-    // --- PWA, BACKUP & RESTORE (TIDAK BERUBAH) ---
+    // --- PWA, BACKUP & RESTORE ---
     function setupPWA() {
         const manifestData = {
             "name": "Rafaela Print - Aplikasi Manajemen", "short_name": "RafaelaPrint", "start_url": ".",
@@ -1102,7 +1126,7 @@
             try {
                 db = JSON.parse(e.target.result);
                 saveData();
-                initializeApp(); // Re-initialize to update all views
+                initializeApp();
                 showNotification("Data berhasil dipulihkan!");
             } catch (err) {
                 showNotification("Gagal memulihkan data.", false);
