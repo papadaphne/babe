@@ -9,12 +9,132 @@
     <meta name="theme-color" content="#1f2937">
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/1f2937/ffffff?text=RP">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+
+// --- BACKUP & RESTORE ---
+function backupData() {
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Backup_RafaelaPrint_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    showNotification("Backup berhasil diunduh!");
+}
+
+function restoreData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const restoredDb = JSON.parse(e.target.result);
+            db = restoredDb;
+            saveData();
+            updateDashboard();
+            renderPesananTable();
+            renderKaryawanTable();
+            updateLaporan();
+            showNotification("Data berhasil dipulihkan dari backup!");
+        } catch (err) {
+            console.error("Restore error:", err);
+            showNotification("Gagal memulihkan data.", false);
+        }
+    };
+    reader.readAsText(file);
+}
+
+</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+
+// --- BACKUP & RESTORE ---
+function backupData() {
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Backup_RafaelaPrint_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    showNotification("Backup berhasil diunduh!");
+}
+
+function restoreData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const restoredDb = JSON.parse(e.target.result);
+            db = restoredDb;
+            saveData();
+            updateDashboard();
+            renderPesananTable();
+            renderKaryawanTable();
+            updateLaporan();
+            showNotification("Data berhasil dipulihkan dari backup!");
+        } catch (err) {
+            console.error("Restore error:", err);
+            showNotification("Gagal memulihkan data.", false);
+        }
+    };
+    reader.readAsText(file);
+}
+
+</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+
+// --- BACKUP & RESTORE ---
+function backupData() {
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Backup_RafaelaPrint_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    showNotification("Backup berhasil diunduh!");
+}
+
+function restoreData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const restoredDb = JSON.parse(e.target.result);
+            db = restoredDb;
+            saveData();
+            updateDashboard();
+            renderPesananTable();
+            renderKaryawanTable();
+            updateLaporan();
+            showNotification("Data berhasil dipulihkan dari backup!");
+        } catch (err) {
+            console.error("Restore error:", err);
+            showNotification("Gagal memulihkan data.", false);
+        }
+    };
+    reader.readAsText(file);
+}
+
+</script>
 
     <style>
         body {
@@ -141,7 +261,7 @@
             margin-bottom: 10px;
         }
         #invoice-template .header-section img {
-            max-width: 50mm; /* Adjust based on your logo size */
+            max-width: 25mm; /* Adjust based on your logo size */
             height: auto;
             margin-bottom: 5px;
             /* Filter ini akan membuat logo menjadi hitam. Pastikan path logo benar. */
@@ -385,6 +505,16 @@
                     </button>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-md">
+<div class="mt-6 flex space-x-4">
+    <button onclick="backupData()" class="bg-indigo-500 text-white px-6 py-2 rounded-lg shadow hover:bg-indigo-600">
+        <i class="fas fa-download mr-2"></i> Backup Data
+    </button>
+    <label class="bg-purple-500 text-white px-6 py-2 rounded-lg shadow hover:bg-purple-600 cursor-pointer">
+        <i class="fas fa-upload mr-2"></i> Restore Data
+        <input type="file" id="restore-input" accept=".json" hidden onchange="restoreData(event)">
+    </label>
+</div>
+
                     <h2 class="text-xl font-bold mb-4">Ringkasan Keuangan (Semua Waktu)</h2>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center border-b pb-2">
@@ -530,6 +660,14 @@
             </div>
         </div>
         <hr>
+
+        
+<hr>
+<div class="qris-section text-center">
+    <p class="font-bold mb-1">Pembayaran via QRIS</p>
+    <img src="assets/qris-rafaela.png" alt="QRIS Rafaela Print" style="max-width:120px; margin:0 auto;">
+    <p class="text-xs mt-1">Scan untuk bayar dengan semua e-wallet/bank</p>
+</div>
 
         <div class="thankyou-message text-center">
             <p>Terima kasih atas kepercayaan anda</p>
@@ -1092,6 +1230,46 @@
         initializeApp();
         setupPWA();
     };
+
+
+
+// --- BACKUP & RESTORE ---
+function backupData() {
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Backup_RafaelaPrint_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    showNotification("Backup berhasil diunduh!");
+}
+
+function restoreData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const restoredDb = JSON.parse(e.target.result);
+            db = restoredDb;
+            saveData();
+            updateDashboard();
+            renderPesananTable();
+            renderKaryawanTable();
+            updateLaporan();
+            showNotification("Data berhasil dipulihkan dari backup!");
+        } catch (err) {
+            console.error("Restore error:", err);
+            showNotification("Gagal memulihkan data.", false);
+        }
+    };
+    reader.readAsText(file);
+}
 
 </script>
 </body>
