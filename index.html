@@ -40,22 +40,35 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
-        /* Custom styles for multi-item form */
-        .item-row {
-            display: grid;
-            grid-template-columns: 3fr 2fr 1fr 2fr auto;
-            gap: 0.5rem;
-            align-items: center;
+
+        /* --- PERUBAHAN 1: Styling untuk form item vertikal --- */
+        .item-card {
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f9fafb; /* gray-50 */
         }
-        @media (max-width: 640px) {
-            .item-row {
-                grid-template-columns: 1fr 1fr;
-            }
-            .item-row .produk-input { grid-column: 1 / 3; }
-            .item-row .ukuran-input { grid-column: 1 / 2; }
-            .item-row .jumlah-input { grid-column: 2 / 3; }
-            .item-row .harga-input { grid-column: 1 / 2; }
-            .item-row .hapus-btn { grid-column: 2 / 3; justify-self: end; }
+        .item-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.75rem;
+        }
+        .item-card .form-group {
+            margin-bottom: 0.75rem;
+        }
+        .item-card .form-group label {
+            display: block;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* medium */
+            color: #374151; /* gray-700 */
+            margin-bottom: 0.25rem;
+        }
+        .item-card .form-group input {
+            width: 100%;
         }
 
 
@@ -164,25 +177,10 @@
         #invoice-template .detail-label { width: 40%; text-align: left; }
         #invoice-template .detail-value { width: 60%; text-align: right; }
         
-        /* Styles for multi-item list in invoice */
-        #invoice-template .order-item-list {
-            font-size: 9pt;
-            padding: 5px 0;
-        }
-        #invoice-template .order-item-list .item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2px;
-        }
-        #invoice-template .order-item-list .item-desc {
-            flex-grow: 1;
-            text-align: left;
-            padding-right: 10px;
-        }
-        #invoice-template .order-item-list .item-total {
-            text-align: right;
-            min-width: 30%;
-        }
+        #invoice-template .order-item-list { font-size: 9pt; padding: 5px 0; }
+        #invoice-template .order-item-list .item { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        #invoice-template .order-item-list .item-desc { flex-grow: 1; text-align: left; padding-right: 10px; }
+        #invoice-template .order-item-list .item-total { text-align: right; min-width: 30%; }
 
         #invoice-template .total-row { display: flex; justify-content: space-between; font-size: 10pt; font-weight: bold; padding-top: 5px; }
         #invoice-template hr { border: 0; border-top: 1px dashed #ccc; margin: 8px 0; }
@@ -279,11 +277,16 @@
             </div>
 
             <div id="pesanan-view" class="hidden">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                     <h1 class="text-3xl font-bold">Manajemen Pesanan</h1>
-                    <button onclick="openModal('pesanan-modal')" class="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Tambah Pesanan
-                    </button>
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <select id="filter-bulan-pesanan" onchange="renderPesananTable()" class="w-full sm:w-auto p-2 border rounded-lg bg-white shadow-sm">
+                            <option value="semua">Semua Bulan</option>
+                            </select>
+                        <button onclick="openModal('pesanan-modal')" class="bg-blue-500 text-white px-4 sm:px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-plus mr-0 sm:mr-2"></i><span class="hidden sm:inline">Tambah</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-md overflow-hidden responsive-table">
                     <table class="w-full text-left">
@@ -371,23 +374,25 @@
     <div id="pesanan-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] flex flex-col">
             <h2 class="text-2xl font-bold mb-6">Tambah Pesanan Baru</h2>
-            <form id="pesanan-form" class="flex-grow overflow-y-auto pr-2">
-                <input type="text" id="nama-pelanggan" placeholder="Nama Pelanggan" class="w-full p-3 border rounded-lg mb-4" required>
-                
-                <div class="border rounded-lg p-4">
-                    <h3 class="font-bold mb-4">Detail Item Pesanan</h3>
-                    <div id="order-items-container" class="space-y-3">
-                        </div>
-                    <button type="button" onclick="tambahItem()" class="mt-4 text-blue-500 font-semibold hover:text-blue-700">
-                        <i class="fas fa-plus mr-2"></i>Tambah Item
-                    </button>
+            <form id="pesanan-form" class="flex-grow overflow-y-auto pr-4 -mr-4">
+                <div class="form-group">
+                    <label for="nama-pelanggan">Nama Pelanggan</label>
+                    <input type="text" id="nama-pelanggan" placeholder="Nama Pelanggan" class="w-full p-3 border rounded-lg" required>
                 </div>
-
-                <div class="mt-4 text-right text-xl font-bold">
+                
+                <hr class="my-6">
+                
+                <div id="order-items-container" class="space-y-3">
+                    </div>
+                <button type="button" onclick="tambahItem()" class="mt-2 text-blue-600 font-semibold hover:text-blue-800">
+                    <i class="fas fa-plus mr-2"></i>Tambah Item Pesanan
+                </button>
+                
+                <div class="mt-6 text-right text-xl font-bold">
                     Total: <span id="total-invoice-preview">Rp 0</span>
                 </div>
 
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                     <h3 class="font-bold mb-2">Hitung Harga Pokok Penjualan (HPP)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input type="number" id="biaya-bahan" placeholder="Biaya Bahan (Rp)" class="w-full p-3 border rounded-lg" required>
@@ -511,6 +516,7 @@
         }
         
         updateDashboard();
+        populateBulanFilter(); // PERUBAHAN 2: Panggil fungsi populasi filter
         renderPesananTable();
         renderKaryawanTable();
         updateLaporan();
@@ -617,37 +623,68 @@
         }
     }
 
-    // --- FUNGSI PESANAN (MULTI-ITEM) ---
+    // --- PERUBAHAN 1: FUNGSI PESANAN DENGAN FORM VERTIKAL ---
     function tambahItem() {
         const container = document.getElementById('order-items-container');
-        const itemRow = document.createElement('div');
-        itemRow.className = 'item-row mb-2';
-        itemRow.innerHTML = `
-            <input type="text" placeholder="Produk/Jasa" class="produk-input p-2 border rounded-md text-sm" required>
-            <input type="text" placeholder="Ukuran (opsional)" class="ukuran-input p-2 border rounded-md text-sm">
-            <input type="number" placeholder="Qty" value="1" min="1" class="jumlah-input p-2 border rounded-md text-sm" oninput="hitungTotalInvoice()">
-            <input type="number" placeholder="Harga Satuan" class="harga-input p-2 border rounded-md text-sm" oninput="hitungTotalInvoice()" required>
-            <button type="button" onclick="hapusItem(this)" class="hapus-btn text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        const itemCount = container.children.length + 1;
+
+        itemCard.innerHTML = `
+            <div class="item-card-header">
+                <h4 class="font-bold text-gray-700">Item #${itemCount}</h4>
+                <button type="button" onclick="hapusItem(this)" class="text-sm text-red-600 font-semibold hover:text-red-800">
+                    <i class="fas fa-trash-alt mr-1"></i>Hapus Item
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                <div class="form-group md:col-span-2">
+                    <label for="produk-${itemCount}">Produk / Jasa</label>
+                    <input type="text" id="produk-${itemCount}" placeholder="Contoh: Kaos Polos Lengan Panjang" class="produk-input p-2 border rounded-md" required>
+                </div>
+                <div class="form-group">
+                    <label for="ukuran-${itemCount}">Ukuran (Opsional)</label>
+                    <input type="text" id="ukuran-${itemCount}" placeholder="Contoh: XL" class="ukuran-input p-2 border rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="jumlah-${itemCount}">Jumlah</label>
+                    <input type="number" id="jumlah-${itemCount}" placeholder="Qty" value="1" min="1" class="jumlah-input p-2 border rounded-md" oninput="hitungTotalInvoice()">
+                </div>
+                <div class="form-group md:col-span-2">
+                    <label for="harga-${itemCount}">Harga Satuan</label>
+                    <input type="number" id="harga-${itemCount}" placeholder="Contoh: 50000" class="harga-input p-2 border rounded-md" oninput="hitungTotalInvoice()" required>
+                </div>
+            </div>
         `;
-        container.appendChild(itemRow);
+        container.appendChild(itemCard);
     }
 
     function hapusItem(button) {
         const container = document.getElementById('order-items-container');
         if (container.children.length > 1) {
-            button.closest('.item-row').remove();
+            button.closest('.item-card').remove();
             hitungTotalInvoice();
+            updateItemNumbers();
         } else {
             showNotification('Minimal harus ada satu item dalam pesanan.', false);
         }
     }
+    
+    function updateItemNumbers() {
+        const container = document.getElementById('order-items-container');
+        const itemCards = container.querySelectorAll('.item-card');
+        itemCards.forEach((card, index) => {
+            const itemNumber = index + 1;
+            card.querySelector('h4').textContent = `Item #${itemNumber}`;
+        });
+    }
 
     function hitungTotalInvoice() {
         let total = 0;
-        const itemRows = document.querySelectorAll('#order-items-container .item-row');
-        itemRows.forEach(row => {
-            const jumlah = parseFloat(row.querySelector('.jumlah-input').value) || 0;
-            const harga = parseFloat(row.querySelector('.harga-input').value) || 0;
+        const itemCards = document.querySelectorAll('#order-items-container .item-card');
+        itemCards.forEach(card => {
+            const jumlah = parseFloat(card.querySelector('.jumlah-input').value) || 0;
+            const harga = parseFloat(card.querySelector('.harga-input').value) || 0;
             total += jumlah * harga;
         });
         document.getElementById('total-invoice-preview').textContent = formatRupiah(total);
@@ -658,23 +695,25 @@
         e.preventDefault();
         
         const items = [];
-        const itemRows = document.querySelectorAll('#order-items-container .item-row');
-        itemRows.forEach(row => {
+        const itemCards = document.querySelectorAll('#order-items-container .item-card');
+        itemCards.forEach(card => {
             items.push({
-                produk: row.querySelector('.produk-input').value,
-                ukuran: row.querySelector('.ukuran-input').value,
-                jumlah: parseFloat(row.querySelector('.jumlah-input').value),
-                harga: parseFloat(row.querySelector('.harga-input').value)
+                produk: card.querySelector('.produk-input').value,
+                ukuran: card.querySelector('.ukuran-input').value,
+                jumlah: parseFloat(card.querySelector('.jumlah-input').value),
+                harga: parseFloat(card.querySelector('.harga-input').value)
             });
         });
 
-        if (items.length === 0) {
+        if (items.length === 0 || items[0].produk === '') {
             showNotification('Pesanan harus memiliki minimal satu item.', false);
             return;
         }
 
         const totalHargaJual = hitungTotalInvoice();
-        const hpp = parseFloat(document.getElementById('biaya-bahan').value) + parseFloat(document.getElementById('biaya-tenaga-kerja').value);
+        const biayaBahan = parseFloat(document.getElementById('biaya-bahan').value) || 0;
+        const biayaTenagaKerja = parseFloat(document.getElementById('biaya-tenaga-kerja').value) || 0;
+        const hpp = biayaBahan + biayaTenagaKerja;
         
         const pesananBaru = {
             id: Date.now(),
@@ -690,6 +729,7 @@
         db.pesanan.push(pesananBaru);
         this.reset();
         closeModal('pesanan-modal');
+        populateBulanFilter(); // PERUBAHAN 2: Update filter jika ada bulan baru
         renderPesananTable();
         updateDashboard();
         updateLaporan();
@@ -697,15 +737,50 @@
         showNotification('Pesanan baru berhasil ditambahkan!');
     });
 
+    // --- PERUBAHAN 2: Fungsi untuk filter bulan ---
+    function populateBulanFilter() {
+        const filterSelect = document.getElementById('filter-bulan-pesanan');
+        
+        const monthsInDb = [...new Set(db.pesanan.map(p => p.tanggal.substring(0, 7)))]; // Ambil YYYY-MM unik
+        monthsInDb.sort().reverse(); // Urutkan dari terbaru
+        
+        // Simpan value yg sedang dipilih
+        const selectedValue = filterSelect.value;
+        
+        // Kosongkan opsi kecuali "Semua Bulan"
+        while (filterSelect.options.length > 1) {
+            filterSelect.remove(1);
+        }
 
+        monthsInDb.forEach(monthYear => {
+            const [year, month] = monthYear.split('-');
+            const date = new Date(year, month - 1);
+            const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            const option = new Option(monthName, monthYear);
+            filterSelect.add(option);
+        });
+        
+        // Kembalikan value yang dipilih jika masih ada
+        filterSelect.value = selectedValue;
+    }
+    
     function renderPesananTable() {
         const tableBody = document.getElementById('pesanan-table-body');
         tableBody.innerHTML = '';
-        if (db.pesanan.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-500">Belum ada data pesanan.</td></tr>';
+
+        const filterValue = document.getElementById('filter-bulan-pesanan').value;
+        
+        let filteredPesanan = db.pesanan;
+        if (filterValue !== 'semua') {
+            filteredPesanan = db.pesanan.filter(p => p.tanggal.startsWith(filterValue));
+        }
+
+        if (filteredPesanan.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-500">Tidak ada data pesanan untuk periode yang dipilih.</td></tr>';
             return;
         }
-        db.pesanan.forEach(p => {
+
+        filteredPesanan.forEach(p => {
             const row = document.createElement('tr');
             row.className = 'border-b';
             row.innerHTML = `
@@ -752,7 +827,7 @@
         }
     }
 
-    // --- FUNGSI KARYAWAN & PAYROLL ---
+    // --- FUNGSI KARYAWAN & PAYROLL (TIDAK BERUBAH) ---
     document.getElementById('karyawan-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const karyawanBaru = {
@@ -852,7 +927,7 @@
         }
     });
 
-    // --- FUNGSI LAPORAN ---
+    // --- FUNGSI LAPORAN & DOWNLOAD (TIDAK BERUBAH) ---
     function updateLaporan() {
         const totalPenjualan = db.pesanan.reduce((sum, p) => sum + p.hargaJual, 0);
         const totalHpp = db.pesanan.reduce((sum, p) => sum + p.hpp, 0);
@@ -865,7 +940,6 @@
         document.getElementById('laporan-laba-bersih').textContent = formatRupiah(labaBersih);
     }
     
-    // --- FUNGSI DOWNLOAD EXCEL (CSV) ---
     function downloadLaporanBulanan() {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -916,7 +990,7 @@
         showNotification(`Laporan ${fileName} berhasil diunduh!`);
     }
 
-    // --- FUNGSI GENERATE INVOICE PDF (MULTI-ITEM) ---
+    // --- FUNGSI GENERATE INVOICE PDF (TIDAK BERUBAH) ---
     async function generateInvoicePDF(pesananId) {
         const pesanan = db.pesanan.find(p => p.id === pesananId);
         if (!pesanan) {
@@ -924,7 +998,6 @@
             return;
         }
 
-        // Populate invoice template
         document.getElementById('invoice-customer-name').textContent = pesanan.pelanggan;
         document.getElementById('invoice-id').textContent = pesanan.invoice;
         const invoiceDateTime = new Date(pesanan.tanggal);
@@ -932,9 +1005,8 @@
         const formattedTime = invoiceDateTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         document.getElementById('invoice-date').textContent = `${formattedDate} ${formattedTime}`;
         
-        // --- NEW: Populate item list ---
         const itemListContainer = document.getElementById('invoice-item-list');
-        itemListContainer.innerHTML = ''; // Clear previous content
+        itemListContainer.innerHTML = '';
         if (pesanan.items && pesanan.items.length > 0) {
             pesanan.items.forEach(item => {
                 const itemDiv = document.createElement('div');
@@ -971,11 +1043,10 @@
             });
 
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgWidth = pdfWidth; // Use full width
+            const imgWidth = pdfWidth;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             
             pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-            
             pdf.save(`Invoice_${pesanan.invoice}.pdf`);
             showNotification(`Invoice ${pesanan.invoice} berhasil diunduh!`);
 
@@ -987,7 +1058,7 @@
         }
     }
 
-    // --- PWA SETUP ---
+    // --- PWA, BACKUP & RESTORE (TIDAK BERUBAH) ---
     function setupPWA() {
         const manifestData = {
             "name": "Rafaela Print - Aplikasi Manajemen", "short_name": "RafaelaPrint", "start_url": ".",
@@ -1000,7 +1071,7 @@
 
         if ('serviceWorker' in navigator) {
             const swCode = `
-                const CACHE_NAME = 'rafaela-print-cache-v2';
+                const CACHE_NAME = 'rafaela-print-cache-v3';
                 const URLS_TO_CACHE = ['./', 'https://cdn.tailwindcss.com', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'rafaela_logo_mono.png', 'qris-rafaela.png'];
                 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(URLS_TO_CACHE))));
                 self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
@@ -1011,7 +1082,6 @@
         }
     }
 
-    // --- BACKUP & RESTORE ---
     function backupData() {
         const dataStr = JSON.stringify(db, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
@@ -1032,10 +1102,7 @@
             try {
                 db = JSON.parse(e.target.result);
                 saveData();
-                updateDashboard();
-                renderPesananTable();
-                renderKaryawanTable();
-                updateLaporan();
+                initializeApp(); // Re-initialize to update all views
                 showNotification("Data berhasil dipulihkan!");
             } catch (err) {
                 showNotification("Gagal memulihkan data.", false);
