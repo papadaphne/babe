@@ -1,1146 +1,138 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rafaela Print - Aplikasi Manajemen</title>
-
-    <link rel="manifest" id="manifest-link">
-    <meta name="theme-color" content="#1f2937">
-    <link rel="apple-touch-icon" href="https://placehold.co/192x192/1f2937/ffffff?text=RP">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            overflow: hidden; /* Prevent body scroll when sidebar is open on mobile */
-        }
-        .modal {
-            display: none; /* Hidden by default */
-        }
-        .modal.show {
-            display: flex; /* Show when active */
-        }
-        .sidebar-icon {
-            transition: all 0.2s ease-in-out;
-        }
-        .sidebar-icon:hover {
-            transform: scale(1.1);
-        }
-        .card {
-            transition: all 0.2s ease-in-out;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-
-        .item-card {
-            border: 1px solid #e5e7eb; /* gray-200 */
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background-color: #f9fafb; /* gray-50 */
-        }
-        .item-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 0.75rem;
-        }
-        .item-card .form-group {
-            margin-bottom: 0.75rem;
-        }
-        .item-card .form-group label {
-            display: block;
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 500; /* medium */
-            color: #374151; /* gray-700 */
-            margin-bottom: 0.25rem;
-        }
-        .item-card .form-group input {
-            width: 100%;
-        }
-
-
-        /* --- Mobile Specific Styles --- */
-        @media (max-width: 767px) { /* Tailind's 'md' breakpoint is 768px */
-            .sidebar-desktop {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease-in-out;
-                z-index: 50; /* Above main content */
-            }
-            .sidebar-desktop.open {
-                transform: translateX(0);
-            }
-            .overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                z-index: 40; /* Below sidebar */
-            }
-            .overlay.open {
-                display: block;
-            }
-            .main-content {
-                margin-left: 0 !important; /* Override potential desktop margin */
-            }
-
-            /* Table Responsiveness for Mobile */
-            .responsive-table table,
-            .responsive-table thead,
-            .responsive-table tbody,
-            .responsive-table th,
-            .responsive-table td,
-            .responsive-table tr {
-                display: block;
-            }
-            .responsive-table thead tr {
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-            .responsive-table tr {
-                border: 1px solid #ddd;
-                margin-bottom: 0.5rem;
-                background-color: white; /* Ensure rows have background */
-                border-radius: 0.5rem; /* Rounded corners for card effect */
-                box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* Subtle shadow */
-            }
-            .responsive-table td {
-                border: none;
-                position: relative;
-                padding-left: 50%; /* Space for the pseudo-element label */
-                text-align: right;
-                padding-top: 0.75rem;
-                padding-bottom: 0.75rem;
-                font-size: 0.9rem; /* Slightly smaller font */
-            }
-            .responsive-table td::before {
-                content: attr(data-label);
-                position: absolute;
-                left: 1rem;
-                width: calc(50% - 1rem);
-                padding-right: 10px;
-                white-space: nowrap;
-                text-align: left;
-                font-weight: bold;
-                color: #4b5563; /* gray-700 */
-            }
-            .responsive-table td select {
-                width: auto; /* Allow select to shrink */
-                display: inline-block; /* Prevent full width */
-            }
-            .responsive-table td .flex {
-                justify-content: flex-end; /* Align actions to the right */
-            }
-        }
-
-        /* Invoice styling for PDF generation */
-        #invoice-template {
-            display: none;
-            width: 80mm;
-            padding: 10mm;
-            box-sizing: border-box;
-            background-color: white;
-            color: black;
-            font-family: 'Inter', sans-serif;
-            font-size: 10pt;
-            line-height: 1.5;
-        }
-        #invoice-template .header-section { text-align: center; margin-bottom: 10px; }
-        #invoice-template .header-section img { max-width: 25mm; margin: 0 auto 5px auto; display: block; height: auto; filter: grayscale(100%) brightness(0%); }
-        #invoice-template .header-section h2 { font-size: 14pt; margin: 0; padding: 0; }
-        #invoice-template .header-section p { font-size: 8pt; margin: 2px 0; }
-        #invoice-template .contact-info p { display: flex; align-items: center; gap: 5px; font-size: 8pt; margin: 2px 0; justify-content: center; }
-        #invoice-template .invoice-details, #invoice-template .customer-details, #invoice-template .order-details, #invoice-template .summary-details, #invoice-template .thankyou-message { margin-bottom: 8px; }
-        #invoice-template .detail-row { display: flex; justify-content: space-between; font-size: 9pt; padding: 2px 0; }
-        #invoice-template .detail-label { width: 40%; text-align: left; }
-        #invoice-template .detail-value { width: 60%; text-align: right; }
-        
-        #invoice-template .order-item-list { font-size: 9pt; padding: 5px 0; }
-        #invoice-template .order-item-list .item { display: flex; justify-content: space-between; margin-bottom: 2px; }
-        #invoice-template .order-item-list .item-desc { flex-grow: 1; text-align: left; padding-right: 10px; }
-        #invoice-template .order-item-list .item-total { text-align: right; min-width: 30%; }
-
-        #invoice-template .total-row { display: flex; justify-content: space-between; font-size: 10pt; font-weight: bold; padding-top: 5px; }
-        #invoice-template hr { border: 0; border-top: 1px dashed #ccc; margin: 8px 0; }
-        #invoice-template .text-center { text-align: center; }
-    </style>
+    <title>Invoice - Babe Jaya Grafika</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 text-gray-800">
-
-    <div id="sidebar-overlay" class="overlay" onclick="toggleSidebar()"></div>
-
-    <div class="flex h-screen">
-        <header class="md:hidden fixed top-0 left-0 right-0 bg-gray-800 text-white p-4 flex justify-between items-center z-30">
-            <button onclick="toggleSidebar()" class="text-white focus:outline-none">
-                <i class="fas fa-bars fa-lg"></i>
-            </button>
-            <div class="text-xl font-bold">Rafaela Print</div>
-            <div></div> </header>
-
-        <aside id="sidebar" class="w-20 bg-gray-800 text-white flex-col items-center py-6 space-y-8 md:flex sidebar-desktop">
-            <div class="text-2xl font-bold">RP</div>
-            <nav class="flex flex-col items-center space-y-6">
-                <button onclick="showView('dashboard')" class="sidebar-icon p-3 rounded-lg bg-gray-700" title="Dashboard">
-                    <i class="fas fa-tachometer-alt fa-lg"></i>
-                </button>
-                <button onclick="showView('pesanan')" class="sidebar-icon p-3 rounded-lg hover:bg-gray-700" title="Manajemen Pesanan">
-                    <i class="fas fa-box-open fa-lg"></i>
-                </button>
-                <button onclick="showView('karyawan')" class="sidebar-icon p-3 rounded-lg hover:bg-gray-700" title="Manajemen Karyawan">
-                    <i class="fas fa-users fa-lg"></i>
-                </button>
-                <button onclick="showView('laporan')" class="sidebar-icon p-3 rounded-lg hover:bg-gray-700" title="Laporan">
-                    <i class="fas fa-chart-pie fa-lg"></i>
-                </button>
-            </nav>
-        </aside>
-
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto mt-16 md:mt-0 main-content">
-            
-            <div id="dashboard-view">
-                <h1 class="text-3xl font-bold mb-2">Dashboard</h1>
-                <p class="text-gray-500 mb-8">Ringkasan bisnis Anda saat ini.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="card bg-white p-6 rounded-xl shadow-md">
-                        <div class="flex items-center">
-                            <div class="p-4 bg-blue-100 rounded-full">
-                                <i class="fas fa-box-open text-blue-500 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-500">Total Pesanan</p>
-                                <p id="total-pesanan" class="text-2xl font-bold">0</p>
-                            </div>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-10 offset-md-1" id="invoice-container">
+                <div class="invoice-header">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
+                            <h1>Babe Jaya Grafika</h1>
+                            <h2 class="text-muted">Invoice</h2>
+                        </div>
+                        <div class="col-xs-12 col-sm-6 col-md-6 text-right">
+                            <img src="logobabe.png" alt="Babe Jaya Grafika" class="logo" style="max-width: 150px;">
                         </div>
                     </div>
-                    <div class="card bg-white p-6 rounded-xl shadow-md">
-                        <div class="flex items-center">
-                            <div class="p-4 bg-green-100 rounded-full">
-                                <i class="fas fa-dollar-sign text-green-500 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-500">Total Penjualan</p>
-                                <p id="total-penjualan" class="text-2xl font-bold">Rp 0</p>
-                            </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
+                            <strong>Dari:</strong>
+                            <address>
+                                <strong>Babe Jaya Grafika</strong><br>
+                                Jl. Banjardowo Ratan Cilik Blok Depan No. 5<br>
+                                Genuk, Semarang<br>
+                                <abbr title="Phone">P:</abbr> 0877 0969 3244<br>
+                                E: babegrafika@gmail.com<br>
+                                W: www.babejayagrafika.com
+                            </address>
+                        </div>
+                        <div class="col-xs-12 col-sm-6 col-md-6 text-right">
+                            <strong>Kepada:</strong>
+                            <address id="customer-address">
+                                </address>
                         </div>
                     </div>
-                    <div class="card bg-white p-6 rounded-xl shadow-md">
-                        <div class="flex items-center">
-                             <div class="p-4 bg-red-100 rounded-full">
-                                <i class="fas fa-receipt text-red-500 text-2xl"></i>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
                             </div>
-                            <div class="ml-4">
-                                <p class="text-gray-500">Total HPP</p>
-                                <p id="total-hpp" class="text-2xl font-bold">Rp 0</p>
-                            </div>
+                        <div class="col-xs-12 col-sm-6 col-md-6 text-right">
+                            <p><strong>Tanggal Invoice:</strong> <span id="invoice-date"></span></p>
+                            <p><strong>Invoice #:</strong> <span id="invoice-number"></span></p>
                         </div>
                     </div>
-                    <div class="card bg-white p-6 rounded-xl shadow-md">
-                        <div class="flex items-center">
-                            <div class="p-4 bg-yellow-100 rounded-full">
-                                <i class="fas fa-money-bill-wave text-yellow-500 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-500">Laba Kotor</p>
-                                <p id="laba-kotor" class="text-2xl font-bold">Rp 0</p>
+                </div>
+
+                <div class="invoice-body">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Detail Item</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-condensed" id="invoice-table">
+                                    <thead>
+                                        <tr>
+                                            <td><strong>Item</strong></td>
+                                            <td class="text-center"><strong>Harga</strong></td>
+                                            <td class="text-center"><strong>Jumlah</strong></td>
+                                            <td class="text-right"><strong>Total</strong></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-8 bg-white p-6 rounded-xl shadow-md">
-                    <h2 class="text-xl font-bold mb-4">Pesanan Terbaru</h2>
-                    <div id="pesanan-terbaru-list" class="space-y-2">
-                        <p class="text-gray-500">Belum ada pesanan.</p>
-                    </div>
-                </div>
-            </div>
 
-            <div id="pesanan-view" class="hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                    <h1 class="text-3xl font-bold">Manajemen Pesanan</h1>
-                    <div class="flex items-center gap-4 w-full sm:w-auto">
-                        <select id="filter-bulan-pesanan" onchange="renderPesananTable()" class="w-full sm:w-auto p-2 border rounded-lg bg-white shadow-sm">
-                            <option value="semua">Semua Bulan</option>
-                        </select>
-                        <button onclick="openModal('pesanan-modal')" class="bg-blue-500 text-white px-4 sm:px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">
-                            <i class="fas fa-plus mr-0 sm:mr-2"></i><span class="hidden sm:inline">Tambah</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-md overflow-hidden responsive-table">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-4">Invoice</th>
-                                <th class="p-4">Pelanggan</th>
-                                <th class="p-4">Total Harga</th>
-                                <th class="p-4">HPP</th>
-                                <th class="p-4">Status</th>
-                                <th class="p-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pesanan-table-body">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="karyawan-view" class="hidden">
-                 <div class="flex justify-between items-center mb-8">
-                    <h1 class="text-3xl font-bold">Manajemen Karyawan & Payroll</h1>
-                    <button onclick="openModal('karyawan-modal')" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow hover:bg-green-600 transition-colors">
-                        <i class="fas fa-user-plus mr-2"></i>Tambah Karyawan
-                    </button>
-                </div>
-                <div class="bg-white rounded-xl shadow-md overflow-hidden responsive-table">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-4">Nama Karyawan</th>
-                                <th class="p-4">Posisi</th>
-                                <th class="p-4">Gaji per Hari</th>
-                                <th class="p-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="karyawan-table-body">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="laporan-view" class="hidden">
-                <div class="flex justify-between items-center mb-8">
-                    <h1 class="text-3xl font-bold">Laporan Keuangan - Rafaela Print</h1>
-                    <button onclick="downloadLaporanBulanan()" class="bg-teal-500 text-white px-6 py-2 rounded-lg shadow hover:bg-teal-600 transition-colors">
-                        <i class="fas fa-file-excel mr-2"></i>Download Laporan Bulan Ini
-                    </button>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div class="mt-6 flex space-x-4">
-                        <button onclick="backupData()" class="bg-indigo-500 text-white px-6 py-2 rounded-lg shadow hover:bg-indigo-600">
-                            <i class="fas fa-download mr-2"></i> Backup Data
-                        </button>
-                        <label class="bg-purple-500 text-white px-6 py-2 rounded-lg shadow hover:bg-purple-600 cursor-pointer">
-                            <i class="fas fa-upload mr-2"></i> Restore Data
-                            <input type="file" id="restore-input" accept=".json" hidden onchange="restoreData(event)">
-                        </label>
-                    </div>
-
-                    <h2 class="text-xl font-bold mb-4 mt-8">Ringkasan Keuangan (Semua Waktu)</h2>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <span class="text-gray-600">Total Pendapatan (dari Penjualan)</span>
-                            <span id="laporan-penjualan" class="font-bold text-green-600">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <span class="text-gray-600">Total Biaya Produksi (HPP)</span>
-                            <span id="laporan-hpp" class="font-bold text-red-600">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <span class="text-gray-600">Total Biaya Gaji</span>
-                            <span id="laporan-gaji" class="font-bold text-red-600">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between items-center pt-2 text-lg">
-                            <span class="font-bold">Laba / Rugi Bersih</span>
-                            <span id="laporan-laba-bersih" class="font-bold text-blue-600">Rp 0</span>
+                <div class="invoice-footer">
+                    <div class="row text-center">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <div class="text-right">
+                                <p><strong>Subtotal: </strong> <span id="subtotal"></span></p>
+                                <p><strong>Pajak (<span id="tax-rate-display">0</span>%): </strong> <span id="tax-amount"></span></p>
+                                <h3><strong>Total: </strong> <span id="total-amount"></span></h3>
+                            </div>
+                            <hr>
+                            <div class="text-left">
+                                <strong>Informasi Pembayaran:</strong>
+                                <p>
+                                    Bank: BCA <br>
+                                    No. Rekening: 3530828289 <br>
+                                    Atas Nama: NURYANTO
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <div id="pesanan-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <h2 class="text-2xl font-bold mb-6">Tambah Pesanan Baru</h2>
-            <form id="pesanan-form" class="flex-grow overflow-y-auto pr-4 -mr-4">
-                <div class="form-group">
-                    <label for="nama-pelanggan">Nama Pelanggan</label>
-                    <input type="text" id="nama-pelanggan" placeholder="Nama Pelanggan" class="w-full p-3 border rounded-lg" required>
-                </div>
-                
-                <hr class="my-6">
-                
-                <div id="order-items-container" class="space-y-3">
-                </div>
-                <button type="button" onclick="tambahItem()" class="mt-2 text-blue-600 font-semibold hover:text-blue-800">
-                    <i class="fas fa-plus mr-2"></i>Tambah Item Pesanan
-                </button>
-                
-                <div class="mt-6 text-right text-xl font-bold">
-                    Total: <span id="total-invoice-preview">Rp 0</span>
-                </div>
-
-                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="font-bold mb-2">Hitung Harga Pokok Penjualan (HPP)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="number" id="biaya-bahan" placeholder="Biaya Bahan (Rp)" class="w-full p-3 border rounded-lg" required>
-                        <input type="number" id="biaya-tenaga-kerja" placeholder="Biaya Tenaga Kerja (Rp)" class="w-full p-3 border rounded-lg" required>
+            <div class="col-xs-12 col-sm-12 col-md-10 offset-md-1" id="controls">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Pengaturan Invoice</h5>
+                        <form id="invoice-form">
+                            <div class="form-group">
+                                <label for="customer-name">Nama Pelanggan:</label>
+                                <input type="text" class="form-control" id="customer-name" required>
+                            </div>
+                             <div class="form-group">
+                                <label for="customer-email">Email Pelanggan:</label>
+                                <input type="email" class="form-control" id="customer-email">
+                            </div>
+                            <div class="form-group">
+                                <label for="customer-addr">Alamat Pelanggan:</label>
+                                <textarea class="form-control" id="customer-addr" rows="3"></textarea>
+                            </div>
+                            <hr>
+                            <h6>Item</h6>
+                            <div id="item-list">
+                                </div>
+                            <button type="button" class="btn btn-secondary" id="add-item">Tambah Item</button>
+                            <hr>
+                             <div class="form-group">
+                                <label for="tax-rate">Pajak (%):</label>
+                                <input type="number" class="form-control" id="tax-rate" value="0" min="0">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Buat Invoice</button>
+                            <button type="button" class="btn btn-success" id="print-invoice" style="display:none;">Cetak Invoice</button>
+                        </form>
                     </div>
                 </div>
-            </form>
-            <div class="flex justify-end mt-6 space-x-4 pt-4 border-t">
-                <button type="button" onclick="closeModal('pesanan-modal')" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                <button type="button" onclick="document.getElementById('pesanan-form').requestSubmit()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Simpan</button>
             </div>
         </div>
     </div>
 
-
-    <div id="karyawan-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6">Tambah Karyawan Baru</h2>
-            <form id="karyawan-form">
-                <input type="text" id="nama-karyawan" placeholder="Nama Karyawan" class="w-full p-3 border rounded-lg mb-4" required>
-                <input type="text" id="posisi-karyawan" placeholder="Posisi (e.g., Penjahit)" class="w-full p-3 border rounded-lg mb-4" required>
-                <input type="number" id="gaji-harian" placeholder="Gaji per Hari (Rp)" class="w-full p-3 border rounded-lg" required>
-                <div class="flex justify-end mt-6 space-x-4">
-                    <button type="button" onclick="closeModal('karyawan-modal')" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                    <button type="submit" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <div id="gaji-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4">Hitung Gaji Karyawan</h2>
-            <p class="mb-6">Karyawan: <span id="gaji-nama-karyawan" class="font-bold"></span></p>
-            <form id="gaji-form">
-                <input type="hidden" id="gaji-karyawan-id">
-                <input type="number" id="jumlah-hari-kerja" placeholder="Jumlah Hari Kerja Bulan Ini" class="w-full p-3 border rounded-lg mb-4" required>
-                <div class="text-right text-xl font-bold mb-6">
-                    Total Gaji: <span id="total-gaji-preview">Rp 0</span>
-                </div>
-                <div class="flex justify-end mt-6 space-x-4">
-                    <button type="button" onclick="closeModal('gaji-modal')" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                    <button type="submit" class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Catat Pembayaran Gaji</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="invoice-template">
-        <div class="header-section">
-            <img src="rafaela_logo_mono.png" alt="Rafaela Print Logo"> 
-            <h2 class="font-bold">RAFAELA PRINT</h2>
-            <p>Jl. Kaumandowo X Genuk Semarang</p>
-            <div class="contact-info">
-                <p><i class="fab fa-whatsapp"></i> 08979012852</p>
-                <p><i class="fab fa-instagram"></i> @rafaelaprint</p>
-                <p><i class="fab fa-facebook-f"></i> Rafaela Print</p>
-            </div>
-        </div>
-        <hr>
-        <div class="customer-details">
-            <div class="detail-row">
-                <span class="detail-label">CUSTOMER</span>
-                <span class="detail-value" id="invoice-customer-name"></span>
-            </div>
-        </div>
-        <hr>
-        <div class="invoice-details">
-            <div class="detail-row">
-                <span class="detail-label">NO. INVOICE</span>
-                <span class="detail-value" id="invoice-id"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">DATE / TIME</span>
-                <span class="detail-value" id="invoice-date"></span>
-            </div>
-        </div>
-        <hr>
-        <div class="order-details">
-            <div class="order-item-list" id="invoice-item-list">
-            </div>
-        </div>
-        <hr>
-        <div class="summary-details">
-            <div class="total-row">
-                <span>TOTAL</span>
-                <span id="invoice-total-sales"></span>
-            </div>
-        </div>
-        <hr>
-        <div class="qris-section text-center">
-            <p class="font-bold mb-1">Pembayaran via QRIS</p>
-            <img src="qris-rafaela.png" alt="QRIS Rafaela Print" style="max-width:120px; margin:0 auto; display:block;">
-            <p class="text-xs mt-1" style="font-size: 8pt;">Scan untuk bayar dengan semua e-wallet/bank</p>
-        </div>
-        <hr>
-        <div class="thankyou-message text-center">
-            <p>Terima kasih atas kepercayaan anda</p>
-            <p>#OneStopPrinting Solution</p>
-            <p class="mt-2" style="margin-top: 5px;">www.rafaelaprint.com</p>
-        </div>
-    </div>
-
-    <div id="notification" class="fixed bottom-5 right-5 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 transition-transform duration-300">
-        Pesan notifikasi
-    </div>
-
-<script>
-    // --- DATABASE SEMENTARA ---
-    let db = {
-        pesanan: [],
-        karyawan: [],
-        payroll: []
-    };
-
-    // --- FUNGSI UTAMA ---
-    function initializeApp() {
-        const savedDb = localStorage.getItem('aplikasiBisnisDb');
-        if (savedDb) {
-            db = JSON.parse(savedDb);
-        }
-        
-        updateDashboard();
-        populateBulanFilter(); 
-        renderPesananTable();
-        renderKaryawanTable();
-        updateLaporan();
-        showView('dashboard');
-    }
-
-    function saveData() {
-        localStorage.setItem('aplikasiBisnisDb', JSON.stringify(db));
-    }
-
-    function formatRupiah(angka) {
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-    }
-
-    function showNotification(message, isSuccess = true) {
-        const notif = document.getElementById('notification');
-        notif.textContent = message;
-        notif.classList.remove('bg-green-500', 'bg-red-500', 'translate-y-20');
-        notif.classList.add(isSuccess ? 'bg-green-500' : 'bg-red-500');
-        notif.classList.remove('translate-y-20');
-        
-        setTimeout(() => {
-            notif.classList.add('translate-y-20');
-        }, 3000);
-    }
-
-    // --- FUNGSI TAMPILAN (VIEW) ---
-    function showView(viewName) {
-        const views = ['dashboard-view', 'pesanan-view', 'karyawan-view', 'laporan-view'];
-        views.forEach(id => document.getElementById(id).classList.add('hidden'));
-        document.getElementById(`${viewName}-view`).classList.remove('hidden');
-
-        const buttons = document.querySelectorAll('.sidebar-icon');
-        buttons.forEach(btn => {
-            btn.classList.remove('bg-gray-700');
-            if (btn.getAttribute('onclick').includes(viewName)) {
-                btn.classList.add('bg-gray-700');
-            }
-        });
-
-        if (window.innerWidth < 768) {
-            toggleSidebar();
-        }
-    }
-
-    // --- FUNGSI MOBILE SIDEBAR ---
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('open');
-        document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
-    }
-
-
-    // --- FUNGSI MODAL ---
-    function openModal(modalId) {
-        document.getElementById(modalId).classList.add('show');
-        if (modalId === 'pesanan-modal') {
-            document.getElementById('order-items-container').innerHTML = '';
-            tambahItem();
-            hitungTotalInvoice();
-        }
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('show');
-        if (modalId === 'pesanan-modal') {
-            document.getElementById('pesanan-form').reset();
-            document.getElementById('order-items-container').innerHTML = '';
-        }
-    }
-
-    // --- FUNGSI DASHBOARD ---
-    function updateDashboard() {
-        const totalPesanan = db.pesanan.length;
-        const totalPenjualan = db.pesanan.reduce((sum, p) => sum + p.hargaJual, 0);
-        const totalHpp = db.pesanan.reduce((sum, p) => sum + p.hpp, 0);
-        const labaKotor = totalPenjualan - totalHpp;
-
-        document.getElementById('total-pesanan').textContent = totalPesanan;
-        document.getElementById('total-penjualan').textContent = formatRupiah(totalPenjualan);
-        document.getElementById('total-hpp').textContent = formatRupiah(totalHpp);
-        document.getElementById('laba-kotor').textContent = formatRupiah(labaKotor);
-        
-        const listContainer = document.getElementById('pesanan-terbaru-list');
-        listContainer.innerHTML = '';
-        if (db.pesanan.length === 0) {
-            listContainer.innerHTML = '<p class="text-gray-500">Belum ada pesanan.</p>';
-        } else {
-            const recentPesanan = db.pesanan.slice(-5).reverse();
-            recentPesanan.forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'flex justify-between items-center p-2 rounded-lg hover:bg-gray-50';
-                item.innerHTML = `
-                    <div>
-                        <p class="font-bold">${p.pelanggan}</p>
-                        <p class="text-sm text-gray-500">#${p.invoice}</p>
-                    </div>
-                    <span class="font-semibold">${formatRupiah(p.hargaJual)}</span>
-                `;
-                listContainer.appendChild(item);
-            });
-        }
-    }
-
-    // --- FUNGSI PESANAN ---
-    function tambahItem() {
-        const container = document.getElementById('order-items-container');
-        const itemCard = document.createElement('div');
-        itemCard.className = 'item-card';
-        const itemCount = container.children.length + 1;
-
-        itemCard.innerHTML = `
-            <div class="item-card-header">
-                <h4 class="font-bold text-gray-700">Item #${itemCount}</h4>
-                <button type="button" onclick="hapusItem(this)" class="text-sm text-red-600 font-semibold hover:text-red-800">
-                    <i class="fas fa-trash-alt mr-1"></i>Hapus Item
-                </button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                <div class="form-group md:col-span-2">
-                    <label for="produk-${itemCount}">Produk / Jasa</label>
-                    <input type="text" id="produk-${itemCount}" placeholder="Contoh: Kaos Polos Lengan Panjang" class="produk-input p-2 border rounded-md" required>
-                </div>
-                <div class="form-group">
-                    <label for="ukuran-${itemCount}">Ukuran (Opsional)</label>
-                    <input type="text" id="ukuran-${itemCount}" placeholder="Contoh: XL" class="ukuran-input p-2 border rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="jumlah-${itemCount}">Jumlah</label>
-                    <input type="number" id="jumlah-${itemCount}" placeholder="Qty" value="1" min="1" class="jumlah-input p-2 border rounded-md" oninput="hitungTotalInvoice()">
-                </div>
-                <div class="form-group md:col-span-2">
-                    <label for="harga-${itemCount}">Harga Satuan</label>
-                    <input type="number" id="harga-${itemCount}" placeholder="Contoh: 50000" class="harga-input p-2 border rounded-md" oninput="hitungTotalInvoice()" required>
-                </div>
-            </div>
-        `;
-        container.appendChild(itemCard);
-    }
-
-    function hapusItem(button) {
-        const container = document.getElementById('order-items-container');
-        if (container.children.length > 1) {
-            button.closest('.item-card').remove();
-            hitungTotalInvoice();
-            updateItemNumbers();
-        } else {
-            showNotification('Minimal harus ada satu item dalam pesanan.', false);
-        }
-    }
-    
-    function updateItemNumbers() {
-        const container = document.getElementById('order-items-container');
-        const itemCards = container.querySelectorAll('.item-card');
-        itemCards.forEach((card, index) => {
-            const itemNumber = index + 1;
-            card.querySelector('h4').textContent = `Item #${itemNumber}`;
-        });
-    }
-
-    function hitungTotalInvoice() {
-        let total = 0;
-        const itemCards = document.querySelectorAll('#order-items-container .item-card');
-        itemCards.forEach(card => {
-            const jumlah = parseFloat(card.querySelector('.jumlah-input').value) || 0;
-            const harga = parseFloat(card.querySelector('.harga-input').value) || 0;
-            total += jumlah * harga;
-        });
-        document.getElementById('total-invoice-preview').textContent = formatRupiah(total);
-        return total;
-    }
-
-    document.getElementById('pesanan-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const items = [];
-        const itemCards = document.querySelectorAll('#order-items-container .item-card');
-        itemCards.forEach(card => {
-            items.push({
-                produk: card.querySelector('.produk-input').value,
-                ukuran: card.querySelector('.ukuran-input').value,
-                jumlah: parseFloat(card.querySelector('.jumlah-input').value),
-                harga: parseFloat(card.querySelector('.harga-input').value)
-            });
-        });
-
-        if (items.length === 0 || items[0].produk === '') {
-            showNotification('Pesanan harus memiliki minimal satu item.', false);
-            return;
-        }
-
-        const totalHargaJual = hitungTotalInvoice();
-        const biayaBahan = parseFloat(document.getElementById('biaya-bahan').value) || 0;
-        const biayaTenagaKerja = parseFloat(document.getElementById('biaya-tenaga-kerja').value) || 0;
-        const hpp = biayaBahan + biayaTenagaKerja;
-        
-        const pesananBaru = {
-            id: Date.now(),
-            invoice: `INV-${Date.now().toString().slice(-6)}`,
-            pelanggan: document.getElementById('nama-pelanggan').value,
-            hargaJual: totalHargaJual,
-            items: items,
-            hpp: hpp,
-            status: 'Baru',
-            tanggal: new Date().toISOString()
-        };
-
-        db.pesanan.push(pesananBaru);
-        this.reset();
-        closeModal('pesanan-modal');
-        populateBulanFilter(); 
-        renderPesananTable();
-        updateDashboard();
-        updateLaporan();
-        saveData();
-        showNotification('Pesanan baru berhasil ditambahkan!');
-    });
-
-    function populateBulanFilter() {
-        const filterSelect = document.getElementById('filter-bulan-pesanan');
-        
-        const monthsInDb = [...new Set(db.pesanan.map(p => p.tanggal.substring(0, 7)))];
-        monthsInDb.sort().reverse();
-        
-        const selectedValue = filterSelect.value;
-        
-        while (filterSelect.options.length > 1) {
-            filterSelect.remove(1);
-        }
-
-        monthsInDb.forEach(monthYear => {
-            const [year, month] = monthYear.split('-');
-            const date = new Date(year, month - 1);
-            const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-            const option = new Option(monthName, monthYear);
-            filterSelect.add(option);
-        });
-        
-        filterSelect.value = selectedValue;
-    }
-    
-    function renderPesananTable() {
-        const tableBody = document.getElementById('pesanan-table-body');
-        tableBody.innerHTML = '';
-
-        const filterValue = document.getElementById('filter-bulan-pesanan').value;
-        
-        let filteredPesanan = db.pesanan;
-        if (filterValue !== 'semua') {
-            filteredPesanan = db.pesanan.filter(p => p.tanggal.startsWith(filterValue));
-        }
-
-        if (filteredPesanan.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-500">Tidak ada data pesanan untuk periode yang dipilih.</td></tr>';
-            return;
-        }
-
-        filteredPesanan.forEach(p => {
-            const row = document.createElement('tr');
-            row.className = 'border-b';
-            row.innerHTML = `
-                <td class="p-4 font-mono text-sm" data-label="Invoice">${p.invoice}</td>
-                <td class="p-4" data-label="Pelanggan">${p.pelanggan}</td>
-                <td class="p-4" data-label="Total Harga">${formatRupiah(p.hargaJual)}</td>
-                <td class="p-4" data-label="HPP">${formatRupiah(p.hpp)}</td>
-                <td class="p-4" data-label="Status">
-                    <select onchange="updateStatus(${p.id}, this.value)" class="p-1 border rounded-md text-sm">
-                        <option value="Baru" ${p.status === 'Baru' ? 'selected' : ''}>Baru</option>
-                        <option value="Diproses" ${p.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
-                        <option value="Selesai" ${p.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
-                        <option value="Batal" ${p.status === 'Batal' ? 'selected' : ''}>Batal</option>
-                    </select>
-                </td>
-                <td class="p-4" data-label="Aksi">
-                    <div class="flex items-center space-x-2">
-                        <button onclick="generateInvoicePDF(${p.id})" class="text-blue-500 hover:text-blue-700 p-1" title="Cetak Invoice"><i class="fas fa-print"></i></button>
-                        <button onclick="hapusPesanan(${p.id})" class="text-red-500 hover:text-red-700 p-1" title="Hapus Pesanan"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
-    
-    function updateStatus(id, newStatus) {
-        const pesanan = db.pesanan.find(p => p.id === id);
-        if (pesanan) {
-            pesanan.status = newStatus;
-            saveData();
-            showNotification(`Status pesanan #${pesanan.invoice} diubah menjadi ${newStatus}`);
-        }
-    }
-
-    function hapusPesanan(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus pesanan ini?')) {
-            db.pesanan = db.pesanan.filter(p => p.id !== id);
-            renderPesananTable();
-            updateDashboard();
-            updateLaporan();
-            saveData();
-            showNotification('Pesanan berhasil dihapus.', true);
-        }
-    }
-
-    // --- FUNGSI KARYAWAN & PAYROLL ---
-    document.getElementById('karyawan-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const karyawanBaru = {
-            id: Date.now(),
-            nama: document.getElementById('nama-karyawan').value,
-            posisi: document.getElementById('posisi-karyawan').value,
-            gajiHarian: parseFloat(document.getElementById('gaji-harian').value)
-        };
-        db.karyawan.push(karyawanBaru);
-        this.reset();
-        closeModal('karyawan-modal');
-        renderKaryawanTable();
-        saveData();
-        showNotification('Karyawan baru berhasil ditambahkan!');
-    });
-
-    function renderKaryawanTable() {
-        const tableBody = document.getElementById('karyawan-table-body');
-        tableBody.innerHTML = '';
-        if (db.karyawan.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-500">Belum ada data karyawan.</td></tr>';
-            return;
-        }
-        db.karyawan.forEach(k => {
-            const row = document.createElement('tr');
-            row.className = 'border-b';
-            row.innerHTML = `
-                <td class="p-4" data-label="Nama Karyawan">${k.nama}</td>
-                <td class="p-4" data-label="Posisi">${k.posisi}</td>
-                <td class="p-4" data-label="Gaji per Hari">${formatRupiah(k.gajiHarian)}</td>
-                <td class="p-4" data-label="Aksi">
-                    <div class="flex items-center space-x-2">
-                        <button onclick="openGajiModal(${k.id})" class="bg-yellow-400 text-white px-3 py-1 rounded-md text-sm hover:bg-yellow-500">
-                            <i class="fas fa-calculator mr-1"></i> Hitung Gaji
-                        </button>
-                        <button onclick="hapusKaryawan(${k.id})" class="text-red-500 hover:text-red-700 ml-2 p-1"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
-    
-    function hapusKaryawan(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus karyawan ini?')) {
-            db.karyawan = db.karyawan.filter(k => k.id !== id);
-            saveData();
-            renderKaryawanTable();
-            showNotification('Karyawan berhasil dihapus.', true);
-        }
-    }
-
-    function openGajiModal(id) {
-        const karyawan = db.karyawan.find(k => k.id === id);
-        if (karyawan) {
-            document.getElementById('gaji-nama-karyawan').textContent = karyawan.nama;
-            document.getElementById('gaji-karyawan-id').value = id;
-            document.getElementById('jumlah-hari-kerja').value = '';
-            document.getElementById('total-gaji-preview').textContent = formatRupiah(0);
-            openModal('gaji-modal');
-        }
-    }
-    
-    document.getElementById('jumlah-hari-kerja').addEventListener('input', function() {
-        const id = document.getElementById('gaji-karyawan-id').value;
-        const karyawan = db.karyawan.find(k => k.id == id);
-        const hariKerja = parseFloat(this.value) || 0;
-        if(karyawan) {
-            const totalGaji = karyawan.gajiHarian * hariKerja;
-            document.getElementById('total-gaji-preview').textContent = formatRupiah(totalGaji);
-        }
-    });
-
-    document.getElementById('gaji-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = document.getElementById('gaji-karyawan-id').value;
-        const karyawan = db.karyawan.find(k => k.id == id);
-        const hariKerja = parseFloat(document.getElementById('jumlah-hari-kerja').value);
-        
-        if (karyawan && hariKerja > 0) {
-            const totalGaji = karyawan.gajiHarian * hariKerja;
-            const payrollRecord = {
-                id: Date.now(),
-                karyawanId: karyawan.id,
-                namaKaryawan: karyawan.nama,
-                periode: new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
-                totalGaji: totalGaji,
-                tanggal: new Date().toISOString()
-            };
-            db.payroll.push(payrollRecord);
-            closeModal('gaji-modal');
-            updateLaporan();
-            saveData();
-            showNotification(`Gaji untuk ${karyawan.nama} sebesar ${formatRupiah(totalGaji)} berhasil dicatat.`);
-        } else {
-            showNotification('Jumlah hari kerja harus diisi.', false);
-        }
-    });
-
-    // --- FUNGSI LAPORAN ---
-    function updateLaporan() {
-        const totalPenjualan = db.pesanan.reduce((sum, p) => sum + p.hargaJual, 0);
-        const totalHpp = db.pesanan.reduce((sum, p) => sum + p.hpp, 0);
-        const totalGaji = db.payroll.reduce((sum, p) => sum + p.totalGaji, 0);
-        const labaBersih = totalPenjualan - totalHpp - totalGaji;
-
-        document.getElementById('laporan-penjualan').textContent = formatRupiah(totalPenjualan);
-        document.getElementById('laporan-hpp').textContent = formatRupiah(totalHpp);
-        document.getElementById('laporan-gaji').textContent = formatRupiah(totalGaji);
-        document.getElementById('laporan-laba-bersih').textContent = formatRupiah(labaBersih);
-    }
-    
-    // --- PERBAIKAN: FUNGSI DOWNLOAD CSV YANG LEBIH BAIK ---
-    function formatCsvCell(data) {
-        let cell = data === null || data === undefined ? '' : String(data);
-        cell = cell.replace(/"/g, '""'); // Escape double quotes
-        if (cell.search(/("|,|\n)/g) >= 0) {
-            cell = `"${cell}"`; // Enclose in double quotes if it contains comma, newline, or double quote
-        }
-        return cell;
-    }
-
-    function downloadLaporanBulanan() {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        
-        const namaBulan = now.toLocaleString('id-ID', { month: 'long' });
-        const fileName = `Laporan_Rafaela_Print_${namaBulan}_${currentYear}.csv`;
-
-        const pesananBulanIni = db.pesanan.filter(p => {
-            const tgl = new Date(p.tanggal);
-            return tgl.getMonth() === currentMonth && tgl.getFullYear() === currentYear;
-        });
-        const payrollBulanIni = db.payroll.filter(p => {
-            const tgl = new Date(p.tanggal);
-            return tgl.getMonth() === currentMonth && tgl.getFullYear() === currentYear;
-        });
-
-        const totalPenjualan = pesananBulanIni.reduce((sum, p) => sum + p.hargaJual, 0);
-        const totalHpp = pesananBulanIni.reduce((sum, p) => sum + p.hpp, 0);
-        const totalGaji = payrollBulanIni.reduce((sum, p) => sum + p.totalGaji, 0);
-        const labaBersih = totalPenjualan - totalHpp - totalGaji;
-        
-        const rows = [];
-        rows.push([`Laporan Keuangan Bulanan - Rafaela Print`]);
-        rows.push([`Bulan: ${namaBulan} ${currentYear}`]);
-        rows.push([]);
-
-        rows.push(['Ringkasan Keuangan']);
-        rows.push(['Kategori', 'Jumlah']);
-        rows.push(['Total Pendapatan', totalPenjualan]);
-        rows.push(['Total HPP', totalHpp]);
-        rows.push(['Total Biaya Gaji', totalGaji]);
-        rows.push(['Laba / Rugi Bersih', labaBersih]);
-        rows.push([]);
-
-        rows.push(['Detail Transaksi Pesanan']);
-        rows.push(['Tanggal', 'Invoice', 'Pelanggan', 'Harga Jual', 'HPP', 'Detail Item']);
-        pesananBulanIni.forEach(p => {
-            const tgl = new Date(p.tanggal).toLocaleDateString('id-ID');
-            const itemDetails = p.items.map(item => {
-                let detail = item.produk || '';
-                if (item.ukuran) detail += ` (${item.ukuran})`;
-                detail += ` x${item.jumlah} -> ${formatRupiah(item.jumlah * item.harga)}`;
-                return detail;
-            }).join(' | '); // Join with pipe for readability inside the cell
-
-            rows.push([tgl, p.invoice, p.pelanggan, p.hargaJual, p.hpp, itemDetails]);
-        });
-        rows.push([]);
-
-        rows.push(['Detail Pembayaran Gaji']);
-        rows.push(['Tanggal', 'Nama Karyawan', 'Periode', 'Total Gaji Dibayar']);
-        payrollBulanIni.forEach(p => {
-            const tgl = new Date(p.tanggal).toLocaleDateString('id-ID');
-            rows.push([tgl, p.namaKaryawan, p.periode, p.totalGaji]);
-        });
-
-        let csvContent = rows.map(row => row.map(formatCsvCell).join(',')).join('\n');
-        
-        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showNotification(`Laporan ${fileName} berhasil diunduh!`);
-    }
-
-    // --- FUNGSI GENERATE INVOICE PDF ---
-    async function generateInvoicePDF(pesananId) {
-        const pesanan = db.pesanan.find(p => p.id === pesananId);
-        if (!pesanan) {
-            showNotification('Pesanan tidak ditemukan.', false);
-            return;
-        }
-
-        document.getElementById('invoice-customer-name').textContent = pesanan.pelanggan;
-        document.getElementById('invoice-id').textContent = pesanan.invoice;
-        const invoiceDateTime = new Date(pesanan.tanggal);
-        const formattedDate = invoiceDateTime.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
-        const formattedTime = invoiceDateTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('invoice-date').textContent = `${formattedDate} ${formattedTime}`;
-        
-        const itemListContainer = document.getElementById('invoice-item-list');
-        itemListContainer.innerHTML = '';
-        if (pesanan.items && pesanan.items.length > 0) {
-            pesanan.items.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'item';
-                
-                let desc = item.produk;
-                if (item.ukuran) {
-                    desc += ` (Ukuran: ${item.ukuran})`;
-                }
-                
-                const itemTotal = item.jumlah * item.harga;
-
-                itemDiv.innerHTML = `
-                    <div class="item-desc">${desc} x${item.jumlah}</div>
-                    <div class="item-total">${formatRupiah(itemTotal)}</div>
-                `;
-                itemListContainer.appendChild(itemDiv);
-            });
-        }
-
-        document.getElementById('invoice-total-sales').textContent = formatRupiah(pesanan.hargaJual);
-        
-        const invoiceTemplate = document.getElementById('invoice-template');
-        invoiceTemplate.style.display = 'block';
-
-        try {
-            const canvas = await html2canvas(invoiceTemplate, { scale: 2 });
-            const imgData = canvas.toDataURL('image/jpeg', 0.8);
-
-            const pdf = new window.jspdf.jsPDF({
-                orientation: 'p',
-                unit: 'mm',
-                format: [80, 297]
-            });
-
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgWidth = pdfWidth;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
-            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-            pdf.save(`Invoice_${pesanan.invoice}.pdf`);
-            showNotification(`Invoice ${pesanan.invoice} berhasil diunduh!`);
-
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            showNotification('Gagal membuat invoice PDF.', false);
-        } finally {
-            invoiceTemplate.style.display = 'none';
-        }
-    }
-
-    // --- PWA, BACKUP & RESTORE ---
-    function setupPWA() {
-        const manifestData = {
-            "name": "Rafaela Print - Aplikasi Manajemen", "short_name": "RafaelaPrint", "start_url": ".",
-            "display": "standalone", "background_color": "#ffffff", "theme_color": "#1f2937",
-            "description": "Aplikasi untuk mengelola bisnis Rafaela Print.",
-            "icons": [{"src": "https://placehold.co/192x192/1f2937/ffffff?text=RP", "sizes": "192x192", "type": "image/png"}, {"src": "https://placehold.co/512x512/1f2937/ffffff?text=RP", "sizes": "512x512", "type": "image/png"}]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-        document.getElementById('manifest-link').setAttribute('href', URL.createObjectURL(manifestBlob));
-
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'rafaela-print-cache-v3';
-                const URLS_TO_CACHE = ['./', 'https://cdn.tailwindcss.com', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'rafaela_logo_mono.png', 'qris-rafaela.png'];
-                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(URLS_TO_CACHE))));
-                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
-                self.addEventListener('activate', e => e.waitUntil(caches.keys().then(cN => Promise.all(cN.map(c => c !== CACHE_NAME ? caches.delete(c) : null)))));
-            `;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).then(reg => console.log('SW registered:', reg.scope)).catch(err => console.log('SW registration failed:', err));
-        }
-    }
-
-    function backupData() {
-        const dataStr = JSON.stringify(db, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Backup_RafaelaPrint_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showNotification("Backup berhasil diunduh!");
-    }
-
-    function restoreData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                db = JSON.parse(e.target.result);
-                saveData();
-                initializeApp();
-                showNotification("Data berhasil dipulihkan!");
-            } catch (err) {
-                showNotification("Gagal memulihkan data.", false);
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    // --- Inisialisasi Aplikasi ---
-    window.onload = () => {
-        initializeApp();
-        setupPWA();
-    };
-
-</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
